@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import date
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 app = FastAPI()
 
@@ -18,7 +19,7 @@ app.add_middleware(
 )
 
 # ------------------- DB 연결 -------------------
-DATABASE_URL = "postgresql://spectrackr_user:1313@10.125.208.186:5432/spectrackr"
+DATABASE_URL = os.environ["DATABASE_URL"]
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
