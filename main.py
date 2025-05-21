@@ -57,3 +57,7 @@ def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db
         RecruitQualification.detail_job == req.detail_job
     ).all()
     return results
+
+@app.get("/")
+def root():
+    return {"message": "Spectrackr API is live!"}
