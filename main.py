@@ -61,3 +61,13 @@ def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db
 @app.get("/")
 def root():
     return {"message": "Spectrackr API is live!"}
+
+@app.on_event("startup")
+def test_db():
+    try:
+        db = SessionLocal()
+        db.execute("SELECT 1")
+        print("✅ DB 연결 성공")
+        db.close()
+    except Exception as e:
+        print(f"❌ DB 연결 실패: {e}")
