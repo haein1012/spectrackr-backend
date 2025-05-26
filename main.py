@@ -56,7 +56,25 @@ def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db
         RecruitQualification.company_name == req.company_name,
         RecruitQualification.detail_job == req.detail_job
     ).all()
-    return results
+
+    keys = [
+        "company_type",
+        "detail_job",
+        "location",
+        "education_level",
+        "major",
+        "experience_level",
+        "experience_years",
+        "language_requirement",
+        "military_requirement",
+        "overseas_available",
+        "etc_requirements",
+        "process"        
+    ]
+
+    result_dicts = [dict(zip(keys, row)) for row in results]
+    
+    return result_dicts
 
 @app.get("/")
 def root():
