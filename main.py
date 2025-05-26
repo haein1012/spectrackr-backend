@@ -71,7 +71,7 @@ def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db
     ]
 
     def sanitize(value):
-        return str(value) if value is not None else ""
+        return value if value is not None else ""
     
     result_dicts = [
         dict(zip(keys, [sanitize(v) for v in row]))
