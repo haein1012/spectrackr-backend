@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, Integer
 from database import Base
 
 class RecruitQualification(Base):
@@ -13,7 +13,7 @@ class RecruitQualification(Base):
     education_level = Column(String)
     major = Column(String)
     main_job = Column(String)
-    experience_years = Column(String)
+    experience_years = Column(Integer)
     language_requirement = Column(String)
     military_requirement = Column(String)
     overseas_available = Column(String)

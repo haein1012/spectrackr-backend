@@ -31,12 +31,11 @@ class JobPostingRequest(BaseModel):
 
 class JobPosting(BaseModel):
     company_type: Optional[str]
-    detail_job: Optional[str]
+    main_job: Optional[str]
     location: Optional[str]
     education_level: Optional[str]
     major: Optional[str]
-    experience_level: Optional[str]
-    experience_years: Optional[str]
+    experience_years: Optional[int]
     language_requirement: Optional[str]
     military_requirement: Optional[str]
     overseas_available: Optional[str]
