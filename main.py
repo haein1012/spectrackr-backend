@@ -59,11 +59,10 @@ def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db
 
     keys = [
         "company_type",
-        "detail_job",
+        "main_job",
         "location",
         "education_level",
         "major",
-        "experience_level",
         "experience_years",
         "language_requirement",
         "military_requirement",
