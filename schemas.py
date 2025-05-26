@@ -41,3 +41,30 @@ class JobPosting(BaseModel):
     overseas_available: Optional[str]
     etc_requirements: Optional[str]
     process: Optional[str]
+
+# 5. /get-applicants (입력: job_category, company_name, detail_job → 출력: 전체 정보)
+# 요청용 스키마
+class ApplicantSearchRequest(BaseModel):
+    job_category: str
+    company: str
+    detail_job: str
+
+# 응답용 스키마
+class ApplicantSchema(BaseModel):
+    id: int
+    company: str
+    detail_job: str
+    job_title: Optional[str]
+    apply_term: Optional[str]
+    university: Optional[str]
+    major: Optional[str]
+    gpa: Optional[int]
+    gpa_scale: Optional[int]
+    toeic: Optional[int]
+    opic: Optional[str]
+    toeic_speaking: Optional[str]
+    work_experience: Optional[str]
+    job_category: str
+
+    class Config:
+        orm_mode = True

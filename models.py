@@ -19,3 +19,22 @@ class RecruitQualification(Base):
     overseas_available = Column(String)
     etc_requirements = Column(String)
     process = Column(String)
+
+
+class Applicant(Base):
+    __tablename__ = "applicants"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company = Column(String)
+    detail_job = Column(String)
+    job_title = Column(String)
+    apply_term = Column(String)
+    university = Column(String)
+    major = Column(String)
+    gpa = Column(Integer)
+    gpa_scale = Column(Integer)
+    toeic = Column(Integer)
+    opic = Column(String)
+    toeic_speaking = Column(String)
+    work_experience = Column(String)
+    job_category = Column(String)

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
-from models import RecruitQualification
+from models import RecruitQualificatio, Applicant
 import schemas
 
 app = FastAPI(title="Spectrackr API", description="채용정보를 위한 FastAPI", version="1.0")
@@ -81,6 +81,16 @@ def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db
     ]
     
     return result_dicts
+
+# 5. /get-applicants
+@app.post("/get-applicants", response_model=list[schemas.ApplicantSchema])
+def get_applicants(req: schemas.ApplicantSearchRequest, db: Session = Depends(get_db)):
+    results = db.query(Applicant).filter(
+        Applicant.job_category == req.job_category,
+        Applicant.company == req.company,
+        Applicant.detail_job == req.detail_job
+    ).all()
+    return results
 
 @app.get("/")
 def root():
