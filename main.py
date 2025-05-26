@@ -40,11 +40,10 @@ def get_company_name_by_detail_job(req: schemas.DetailJobRequest, db: Session = 
 def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db)):
     results = db.query(
         RecruitQualification.company_type,
-        RecruitQualification.detail_job,
+        RecruitQualification.main_job,
         RecruitQualification.location,
         RecruitQualification.education_level,
         RecruitQualification.major,
-        RecruitQualification.experience_level,
         RecruitQualification.experience_years,
         RecruitQualification.language_requirement,
         RecruitQualification.military_requirement,
