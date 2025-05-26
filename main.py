@@ -54,7 +54,7 @@ def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db
         RecruitQualification.job_category == req.job_category,
         RecruitQualification.company_name == req.company_name,
         RecruitQualification.detail_job == req.detail_job
-    ).all()
+    ).distinct().all()
 
     keys = [
         "company_type",
