@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, Float
 from database import Base
 
 class RecruitQualification(Base):
@@ -31,8 +31,8 @@ class Applicant(Base):
     apply_term = Column(String)
     university = Column(String)
     major = Column(String)
-    gpa = Column(Integer)
-    gpa_scale = Column(Integer)
+    gpa = Column(Float)
+    gpa_scale = Column(Float)
     toeic = Column(Integer)
     opic = Column(String)
     toeic_speaking = Column(String)
