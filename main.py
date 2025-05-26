@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
-from models import RecruitQualificatio, Applicant
+from models import RecruitQualification, Applicant
 import schemas
 
 app = FastAPI(title="Spectrackr API", description="채용정보를 위한 FastAPI", version="1.0")
