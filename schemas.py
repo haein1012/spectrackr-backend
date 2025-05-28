@@ -44,7 +44,7 @@ class JobPosting(BaseModel):
 
 # 5. /get-applicants (입력: job_category, company_name, detail_job → 출력: 전체 정보)
 # 요청용 스키마
-class ApplicantSearchRequest(BaseModel):
+class ApplicantSearchByCompanyDetailJobRequest(BaseModel):
     company: str
     detail_job: str
 
