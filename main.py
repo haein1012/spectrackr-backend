@@ -83,10 +83,9 @@ def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db
     return result_dicts
 
 # 5. /get-applicants
-@app.post("/get-applicants", response_model=list[schemas.ApplicantSchema], tags=['스펙 기준 검색'])
-def get_applicants(req: schemas.ApplicantSearchRequest, db: Session = Depends(get_db)):
+@app.post("/get-applicants-by-company-detail-job", response_model=list[schemas.ApplicantSchema], tags=["스펙 기준 검색"])
+def get_applicants_by_company_detail_job(req: schemas.ApplicantSearchByCompanyDetailJobRequest, db: Session = Depends(get_db)):
     results = db.query(Applicant).filter(
-        Applicant.job_category == req.job_category,
         Applicant.company == req.company,
         Applicant.detail_job == req.detail_job
     ).all()
