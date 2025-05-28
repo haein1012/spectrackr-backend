@@ -68,3 +68,21 @@ class ApplicantSchema(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+# 회사 이름만 받는 요청 스키마
+class CompanyOnlyRequest(BaseModel):
+    company: str
+
+# 직무 이름만 받는 요청 스키마
+class DetailJobOnlyRequest(BaseModel):
+    detail_job: str
+
+
+# 회사 이름만 반환하는 응답 스키마
+class CompanyList(BaseModel):
+    company: str
+
+# 직무 이름만 반환하는 응답 스키마
+class DetailJobList(BaseModel):
+    detail_job: str
