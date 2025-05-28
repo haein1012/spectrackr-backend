@@ -15,28 +15,28 @@ def get_db():
         db.close()
 
 # 1. /get-company-name-and-detail-job
-@app.post("/get-company-name-and-detail-job", response_model=list[schemas.CompanyAndDetailJob])
+@app.post("/get-company-name-and-detail-job", response_model=list[schemas.CompanyAndDetailJob], tags=['회사 기준 검색'])
 def get_company_name_and_detail_job(req: schemas.JobCategoryRequest, db: Session = Depends(get_db)):
     results = db.query(RecruitQualification.company_name, RecruitQualification.detail_job) \
         .filter(RecruitQualification.job_category == req.job_category).all()
     return results
 
 # 2. /get-detail-job-by-company-name
-@app.post("/get-detail-job-by-company-name", response_model=list[schemas.DetailJob])
+@app.post("/get-detail-job-by-company-name", response_model=list[schemas.DetailJob], tags=['회사 기준 검색'])
 def get_detail_job_by_company_name(req: schemas.CompanyNameRequest, db: Session = Depends(get_db)):
     results = db.query(RecruitQualification.detail_job) \
         .filter(RecruitQualification.company_name == req.company_name).all()
     return results
 
 # 3. /get-company-name-by-detail-job
-@app.post("/get-company-name-by-detail-job", response_model=list[schemas.CompanyName])
+@app.post("/get-company-name-by-detail-job", response_model=list[schemas.CompanyName], tags=['회사 기준 검색'])
 def get_company_name_by_detail_job(req: schemas.DetailJobRequest, db: Session = Depends(get_db)):
     results = db.query(RecruitQualification.company_name) \
         .filter(RecruitQualification.detail_job == req.detail_job).all()
     return results
 
 # 4. /get-job-posting
-@app.post("/get-job-posting", response_model=list[schemas.JobPosting])
+@app.post("/get-job-posting", response_model=list[schemas.JobPosting], tags=['회사 기준 검색'])
 def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db)):
     results = db.query(
         RecruitQualification.company_type,
@@ -83,7 +83,7 @@ def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db
     return result_dicts
 
 # 5. /get-applicants
-@app.post("/get-applicants", response_model=list[schemas.ApplicantSchema])
+@app.post("/get-applicants", response_model=list[schemas.ApplicantSchema], tags=['스펙 기준 검색'])
 def get_applicants(req: schemas.ApplicantSearchRequest, db: Session = Depends(get_db)):
     results = db.query(Applicant).filter(
         Applicant.job_category == req.job_category,
@@ -91,6 +91,20 @@ def get_applicants(req: schemas.ApplicantSearchRequest, db: Session = Depends(ge
         Applicant.detail_job == req.detail_job
     ).all()
     return results
+
+# 6. /get-companies-by-detail-job
+@app.post("/get-companiy-by-detail-job", response_model=list[schemas.CompanyList], tags=['스펙 기준 검색'])
+def get_companies_by_detail_job(req: schemas.DetailJobOnlyRequest, db: Session = Depends(get_db)):
+    results = db.query(Applicant.company).filter(Applicant.detail_job == req.detail_job).distinct().all()
+    return [{"company": r[0]} for r in results]
+
+# 7. /get-detail-jobs-by-company
+@app.post("/get-detail-job-by-company", response_model=list[schemas.DetailJobList], tags=['스펙 기준 검색'])
+def get_detail_jobs_by_company(req: schemas.CompanyOnlyRequest, db: Session = Depends(get_db)):
+    results = db.query(Applicant.detail_job).filter(Applicant.company == req.company).distinct().all()
+    return [{"detail_job": r[0]} for r in results]
+
+
 
 @app.get("/")
 def root():
