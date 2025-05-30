@@ -40,3 +40,4 @@ class Applicant(Base):
     toeic_speaking = Column(String)
     work_experience = Column(String)
     job_category = Column(String)
+    other_certifications = Column(String)

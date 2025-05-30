@@ -40,7 +40,7 @@ class JobPosting(BaseModel):
     class Config:
         orm_mode = True
 
-# 5. /get-applicants (입력: job_category, company_name, detail_job → 출력: 전체 정보)
+# 5. /get-applicants 
 # 요청용 스키마
 class ApplicantSearchByCompanyDetailJobRequest(BaseModel):
     company: str
@@ -62,6 +62,7 @@ class ApplicantSchema(BaseModel):
     toeic_speaking: Optional[str]
     work_experience: Optional[str]
     job_category: str
+    other_certifications: Optional[str]
 
     class Config:
         orm_mode = True
