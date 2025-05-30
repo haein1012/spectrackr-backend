@@ -40,6 +40,8 @@ class JobPosting(BaseModel):
     military_requirement: Optional[str]
     overseas_available: Optional[str]
     etc_requirements: Optional[str]
+    preferred_qualification: Optional[str]  # ← 추가
+    image: Optional[str]  # ← 추가
     process: Optional[str]
 
 # 5. /get-applicants (입력: job_category, company_name, detail_job → 출력: 전체 정보)

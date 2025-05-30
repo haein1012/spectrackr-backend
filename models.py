@@ -19,6 +19,8 @@ class RecruitQualification(Base):
     overseas_available = Column(String)
     etc_requirements = Column(String)
     process = Column(String)
+    image = Column(String)  
+    preferred_qualification = Column(String)  
 
 
 class Applicant(Base):
