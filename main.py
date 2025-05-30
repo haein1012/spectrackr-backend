@@ -35,52 +35,40 @@ def get_company_name_by_detail_job(req: schemas.DetailJobRequest, db: Session = 
         .filter(RecruitQualification.detail_job == req.detail_job).all()
     return results
 
-# 4. /get-job-posting
+# main.py 수정
 @app.post("/get-job-posting", response_model=list[schemas.JobPosting], tags=['회사 기준 검색'])
 def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db)):
-    results = db.query(
-        RecruitQualification.company_type,
-        RecruitQualification.main_job,
+    result = db.query(
         RecruitQualification.location,
         RecruitQualification.education_level,
-        RecruitQualification.major,
-        RecruitQualification.experience_years,
-        RecruitQualification.language_requirement,
-        RecruitQualification.military_requirement,
-        RecruitQualification.overseas_available,
+        RecruitQualification.experience,
+        RecruitQualification.image,
         RecruitQualification.etc_requirements,
-        RecruitQualification.process
+        RecruitQualification.preferred_qualification
     ).filter(
         RecruitQualification.job_category == req.job_category,
         RecruitQualification.company_name == req.company_name,
         RecruitQualification.detail_job == req.detail_job
-    ).distinct().all()
+    ).first()
 
-    keys = [
-        "company_type",
-        "main_job",
-        "location",
-        "education_level",
-        "major",
-        "experience_years",
-        "language_requirement",
-        "military_requirement",
-        "overseas_available",
-        "etc_requirements",
-        "process"        
-    ]
+    if not result:
+        raise HTTPException(status_code=404, detail="해당 조건에 맞는 채용 정보가 없습니다.")
 
-    def sanitize(key, value):
-        if value is None:
-            return "" if key != "experience_years" else 0
-        return value
-    
-    result_dicts = [
-        dict(zip(keys, [sanitize(k, v) for k, v in zip(keys, row)]))
-        for row in results
-    ]
-    
-    return result_dicts
+    location, education_level, experience, image, etc_requirements, preferred_qualification = result
+
+    base_data = {
+        "location": location,
+        "education_level": education_level,
+        "experience": experience,
+    }
+
+    if image:
+        base_data["image"] = image
+    else:
+        base_data["etc_requirements"] = etc_requirements
+        base_data["preferred_qualification"] = preferred_qualification
+
+    return [base_data]
 
 # 5. /get-applicants
 @app.post("/get-applicants-by-company-detail-job", response_model=list[schemas.ApplicantSchema], tags=["스펙 기준 검색"])
