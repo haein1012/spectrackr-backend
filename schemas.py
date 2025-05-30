@@ -32,7 +32,7 @@ class JobPostingRequest(BaseModel):
 class JobPosting(BaseModel):
     location: Optional[str]
     education_level: Optional[str]
-    experience: Optional[int]
+    experience: Optional[str]
     image: Optional[str] = None
     etc_requirements: Optional[str] = None
     preferred_qualification: Optional[str] = None
