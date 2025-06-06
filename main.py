@@ -145,10 +145,10 @@ def test_db():
     try:
         db = SessionLocal()
         db.execute(text("SELECT 1"))
-        print("✅ DB 연결 성공")
+        print("DB 연결 성공")
         db.close()
     except Exception as e:
-        print(f"❌ DB 연결 실패: {e}")
+        print(f"DB 연결 실패: {e}")
 
 if __name__ == "__main__":
     import uvicorn
