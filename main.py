@@ -1,171 +1,150 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from models import RecruitQualification, Applicant
+from model import RecruitQualification, Applicant
 import schemas
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
-app = FastAPI(title="Spectrackr API", description="채용정보를 위한 FastAPI", version="1.0")
+# --- Factory Pattern: 요청 객체 생성 팩토리 ---
+class RequestFactory:
+    @staticmethod
+    def create(schema_cls, data):
+        return schema_cls(**data)
 
-# ✅ Decorator Pattern: 로그 출력용 데코레이터 정의
-def log_endpoint(func):
+# --- Adapter Pattern: DB 결과를 프론트엔드가 원하는 포맷으로 변환 ---
+class ResultAdapter:
+    @staticmethod
+    def to_dict_list(keys, rows):
+        def sanitize(key, value):
+            defaults = {"experience": "0", "image": ""}
+            return value if value is not None else defaults.get(key, "")
+
+        return [dict(zip(keys, [sanitize(k, v) for k, v in zip(keys, row)])) for row in rows]
+
+# --- Decorator Pattern: 공통 예외 처리 데코레이터 ---
+def safe_handler(func):
     def wrapper(*args, **kwargs):
-        print(f"📨 호출됨: {func.__name__}")
-        return func(*args, **kwargs)
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
     return wrapper
 
-# ✅ Factory Method Pattern: DB 세션 팩토리 함수
-def db_session_factory():
+app = FastAPI(title="Spectrackr API", description="채용정보를 위한 FastAPI", version="2.7.1")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
 
-# ✅ Adapter Pattern: row 데이터를 dict로 변환
-def adapt_company_row(row):
-    return {"company": row[0]} if row and row[0] else {}
+@app.post("/get-company-name-and-detail-job", response_model=list[schemas.CompanyAndDetailJob], tags=['회사 기준 검색'])
+@safe_handler
+def get_company_name_and_detail_job(req: schemas.JobCategoryRequest, db: Session = Depends(get_db)):
+    return db.query(RecruitQualification.company_name, RecruitQualification.detail_job)\
+             .filter(RecruitQualification.job_category == req.job_category).all()
 
-def adapt_detail_job_row(row):
-    return {"detail_job": row[0]} if row and row[0] else {}
+@app.post("/get-detail-job-by-company-name", response_model=list[schemas.DetailJob], tags=['회사 기준 검색'])
+@safe_handler
+def get_detail_job_by_company_name(req: schemas.CompanyNameRequest, db: Session = Depends(get_db)):
+    return db.query(RecruitQualification.detail_job)\
+             .filter(RecruitQualification.company_name == req.company_name).all()
 
-def adapt_company_and_job_row(row):
-    return {"company": row[0], "detail_job": row[1]} if row else {}
+@app.post("/get-company-name-by-detail-job", response_model=list[schemas.CompanyName], tags=['회사 기준 검색'])
+@safe_handler
+def get_company_name_by_detail_job(req: schemas.DetailJobRequest, db: Session = Depends(get_db)):
+    return db.query(RecruitQualification.company_name)\
+             .filter(RecruitQualification.detail_job == req.detail_job).all()
 
-# ✅ Facade Pattern: 복잡한 비즈니스 로직을 내부 함수로 위임
-def get_job_posting_facade(db, req):
-    result = db.query(
+@app.post("/get-job-posting", response_model=list[schemas.JobPosting], tags=['회사 기준 검색'])
+@safe_handler
+def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(get_db)):
+    results = db.query(
+        RecruitQualification.company_type,
+        RecruitQualification.main_job,
         RecruitQualification.location,
         RecruitQualification.education_level,
+        RecruitQualification.major,
         RecruitQualification.experience,
-        RecruitQualification.image,
+        RecruitQualification.language_requirement,
+        RecruitQualification.military_requirement,
+        RecruitQualification.overseas_available,
         RecruitQualification.etc_requirements,
-        RecruitQualification.preferred_qualification
+        RecruitQualification.process,
+        RecruitQualification.image
     ).filter(
         RecruitQualification.job_category == req.job_category,
         RecruitQualification.company_name == req.company_name,
         RecruitQualification.detail_job == req.detail_job
-    ).first()
+    ).distinct().all()
 
-    if not result:
-        raise HTTPException(status_code=404, detail="해당 조건에 맞는 채용 정보가 없습니다.")
+    keys = [
+        "company_type", "main_job", "location", "education_level", "major", "experience",
+        "language_requirement", "military_requirement", "overseas_available",
+        "etc_requirements", "process", "image"
+    ]
 
-    location, education_level, experience, image, etc_requirements, preferred_qualification = result
+    return ResultAdapter.to_dict_list(keys, results)
 
-    base_data = {
-        "location": location,
-        "education_level": education_level,
-        "experience": experience,
-    }
+@app.post("/get-applicants-by-company-detail-job", response_model=list[schemas.ApplicantSchema], tags=["스펙 기준 검색"])
+@safe_handler
+def get_applicants_by_company_detail_job(req: schemas.ApplicantSearchByCompanyDetailJobRequest, db: Session = Depends(get_db)):
+    return db.query(Applicant).filter(
+        Applicant.company == req.company,
+        Applicant.detail_job == req.detail_job
+    ).all()
 
-    if image:
-        base_data["image"] = image
-    else:
-        base_data["etc_requirements"] = etc_requirements
-        base_data["preferred_qualification"] = preferred_qualification
+@app.post("/get-companiy-by-detail-job", response_model=list[schemas.CompanyList], tags=['스펙 기준 검색'])
+@safe_handler
+def get_companies_by_detail_job(req: schemas.DetailJobOnlyRequest, db: Session = Depends(get_db)):
+    query = db.query(Applicant.company)
+    if req.detail_job:
+        query = query.filter(Applicant.detail_job == req.detail_job)
+    return [{"company": r[0]} for r in query.distinct().all()]
 
-    return [base_data]
+@app.post("/get-detail-job-by-company", response_model=list[schemas.DetailJobList], tags=['스펙 기준 검색'])
+@safe_handler
+def get_detail_jobs_by_company(req: schemas.CompanyOnlyRequest, db: Session = Depends(get_db)):
+    query = db.query(Applicant.detail_job)
+    if req.company:
+        query = query.filter(Applicant.company == req.company)
+    return [{"detail_job": r[0]} for r in query.distinct().all() if r[0] is not None]
 
-# ✅ 엔드포인트들
+@app.get("/get-all-universities", response_model=list[str], tags=["스펙 기준 검색"])
+@safe_handler
+def get_all_universities(db: Session = Depends(get_db)):
+    return [r[0] for r in db.query(Applicant.university)\
+                          .filter(Applicant.university.isnot(None))\
+                          .filter(Applicant.university != "")\
+                          .distinct().all()]
+
+@app.post("/get-applicants-by-school", response_model=list[schemas.CompanyAndJob], tags=["스펙 기준 검색"])
+@safe_handler
+def get_applicants_by_school(req: schemas.SchoolRequest, db: Session = Depends(get_db)):
+    results = db.query(Applicant.company, Applicant.detail_job)\
+                .filter(Applicant.university == req.university)\
+                .distinct().all()
+    return [{"company": r[0], "detail_job": r[1]} for r in results]
+
 @app.get("/")
-@log_endpoint
 def root():
     return {"message": "Spectrackr API is live!"}
-
-@app.post("/get-company-name-and-detail-job")
-@log_endpoint
-def get_company_name_and_detail_job(req: schemas.JobCategoryRequest, db: Session = Depends(db_session_factory)):
-    results = (
-        db.query(RecruitQualification.company_name, RecruitQualification.detail_job)
-          .filter(RecruitQualification.job_category == req.job_category)
-          .all()
-    )
-    return results
-
-@app.post("/get-detail-job-by-company-name")
-@log_endpoint
-def get_detail_job_by_company_name(req: schemas.CompanyNameRequest, db: Session = Depends(db_session_factory)):
-    results = (
-        db.query(RecruitQualification.detail_job)
-          .filter(RecruitQualification.company_name == req.company_name)
-          .all()
-    )
-    return results
-
-@app.post("/get-company-name-by-detail-job")
-@log_endpoint
-def get_company_name_by_detail_job(req: schemas.DetailJobRequest, db: Session = Depends(db_session_factory)):
-    results = (
-        db.query(RecruitQualification.company_name)
-          .filter(RecruitQualification.detail_job == req.detail_job)
-          .all()
-    )
-    return results
-
-@app.post("/get-job-posting")
-@log_endpoint
-def get_job_posting(req: schemas.JobPostingRequest, db: Session = Depends(db_session_factory)):
-    return get_job_posting_facade(db, req)
-
-@app.post("/get-applicants-by-company-detail-job")
-@log_endpoint
-def get_applicants_by_company_detail_job(req: schemas.ApplicantSearchByCompanyDetailJobRequest, db: Session = Depends(db_session_factory)):
-    results = (
-        db.query(Applicant)
-          .filter(Applicant.company == req.company, Applicant.detail_job == req.detail_job)
-          .all()
-    )
-    return results
-
-@app.post("/get-companiy-by-detail-job")
-@log_endpoint
-def get_companies_by_detail_job(req: schemas.DetailJobOnlyRequest, db: Session = Depends(db_session_factory)):
-    results = (
-        db.query(Applicant.company)
-          .filter(Applicant.detail_job == req.detail_job)
-          .distinct()
-          .all()
-    )
-    return [adapt_company_row(r) for r in results]
-
-@app.post("/get-detail-job-by-company")
-@log_endpoint
-def get_detail_jobs_by_company(req: schemas.CompanyOnlyRequest, db: Session = Depends(db_session_factory)):
-    results = (
-        db.query(Applicant.detail_job)
-          .filter(Applicant.company == req.company)
-          .distinct()
-          .all()
-    )
-    return [adapt_detail_job_row(r) for r in results]
-
-@app.get("/get-all-universities")
-@log_endpoint
-def get_all_universities(db: Session = Depends(db_session_factory)):
-    results = (
-        db.query(Applicant.university)
-          .filter(Applicant.university.isnot(None))
-          .filter(Applicant.university != "")
-          .distinct()
-          .all()
-    )
-    return [r[0] for r in results]
-
-@app.post("/get-applicants-by-school")
-@log_endpoint
-def get_applicants_by_school(req: schemas.SchoolRequest, db: Session = Depends(db_session_factory)):
-    results = (
-        db.query(Applicant.company, Applicant.detail_job)
-          .filter(Applicant.university == req.university)
-          .distinct()
-          .all()
-    )
-    return [adapt_company_and_job_row(r) for r in results]
 
 @app.on_event("startup")
 def test_db():
     try:
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         print("✅ DB 연결 성공")
         db.close()
     except Exception as e:

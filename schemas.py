@@ -30,17 +30,20 @@ class JobPostingRequest(BaseModel):
     detail_job: str
 
 class JobPosting(BaseModel):
+    company_type: Optional[str]
+    main_job: Optional[str]
     location: Optional[str]
     education_level: Optional[str]
+    major: Optional[str]
     experience: Optional[str]
-    image: Optional[str] = None
-    etc_requirements: Optional[str] = None
-    preferred_qualification: Optional[str] = None
+    language_requirement: Optional[str]
+    military_requirement: Optional[str]
+    overseas_available: Optional[str]
+    etc_requirements: Optional[str]
+    process: Optional[str]
+    image: Optional[str]
 
-    class Config:
-        orm_mode = True
-
-# 5. /get-applicants 
+# 5. /get-applicants (입력: job_category, company_name, detail_job → 출력: 전체 정보)
 # 요청용 스키마
 class ApplicantSearchByCompanyDetailJobRequest(BaseModel):
     company: str
@@ -62,7 +65,6 @@ class ApplicantSchema(BaseModel):
     toeic_speaking: Optional[str]
     work_experience: Optional[str]
     job_category: str
-    other_certifications: Optional[str]
 
     class Config:
         orm_mode = True
@@ -85,8 +87,7 @@ class CompanyList(BaseModel):
 class DetailJobList(BaseModel):
     detail_job: str
 
-
-# 예준쌤을 위한 스키마
+# 예준쌤을 위한 스키마 > Thx to haein!
 class SchoolRequest(BaseModel):
     university: str
 

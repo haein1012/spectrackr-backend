@@ -19,8 +19,7 @@ class RecruitQualification(Base):
     overseas_available = Column(String)
     etc_requirements = Column(String)
     process = Column(String)
-    image = Column(String)  # <- 새로 추가
-    preferred_qualification = Column(String)  # <- 새로 추가 
+    image = Column(String)
 
 
 class Applicant(Base):
@@ -40,4 +39,3 @@ class Applicant(Base):
     toeic_speaking = Column(String)
     work_experience = Column(String)
     job_category = Column(String)
-    other_certifications = Column(String)
